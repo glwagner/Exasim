@@ -1,57 +1,53 @@
-function mass(u, q, w, v, x, t, mu, eta)
-    m = [1.0, 1.0, 1.0];
-    return m;
-end
-function flux(u, q, w, v, x, t, mu, eta)
-    g = mu[1];    
-    r = u[1];  # total height: h
-    ru = u[2]; # h*u 
-    rv = u[3]; # h*v   
-    r1 = 1/r;
-    uv = ru*r1; # u
-    vv = rv*r1; #v    
-    p = (0.5*g)*(r*r); # 0.5*g*h^2    
-    f = [ru, ru*uv+p, rv*uv, rv, ru*vv, rv*vv+p];
-    # [h*u h*u^2 + 0.5*g*h^2  huv h*v h*u*v h*v^2+0.5*g*h^2]
-    f = reshape(f,(3,2));    
+mass(U, q, w, v, x, t, μ, η) = [1.0, 1.0, 1.0]
+source(U, q, w, v, x, t, μ, η) = [0.0, 0.0, 0.0]
+ubou(U, q, w, v, x, t, μ, η, û, n, τ) = [0.0, 0.0, 0.0]
 
-    return f;
+function flux(U, q, w, v, x, t, μ, η)
+    h, hu, hv = U
+
+    h⁻¹ = 1/h
+
+    uv = hu * h⁻¹ # u
+    vv = hv * h⁻¹ # v
+
+    g = μ[1] # gravitational acceleration
+
+    p = g * h^2 / 2 # g * h^2 / 2
+
+    f = [hu, hu * uv + p, hv * uv, hv, hu * vv, hv * vv + p]
+
+    f = reshape(f, (3, 2))
+
+    return f
 end
-function source(u, q, w, v, x, t, mu, eta)
-    s = [0.0, 0.0, 0.0];
-    return s;
+
+function fbou(U, q, w, v, X, t, μ, η, Û, n, τ)
+    f = flux(U, q, w, v, X, t, μ, η)
+    f̂ = f[:, 1] * n[1] + f[:, 2] * n[2] + τ[1] * (U - Û)
+    return f̂
 end
-function ubou(u, q, w, v, x, t, mu, eta, uhat, n, tau)
-    ub = [0.0, 0.0, 0.0];
-    return ub;
-end
-function fbou(u, q, w, v, x, t, mu, eta, uhat, n, tau)
-    f = flux(u, q, w, v, x, t, mu, eta);
-    fb = f[:,1]*n[1] + f[:,2]*n[2] + tau[1]*(u-uhat);
-    return fb;
-end
-function initu(x, mu, eta)
-    epsil = 0.1; # perturbation magnitude
-    l = 0.5;     # Gaussian width
-    k = 0.5;     # Sinusoidal wavenumber
+
+function initu(X, μ, η)
+    ϵ = 0.1 # Perturbation magnitude
+    l = 0.5 # Gaussian width
+    k = 0.5 # Sinusoidal wavenumber
     
-    x1 = x[1];
-    x2 = x[2];
+    x = X[1]
+    y = X[2]
     
     # The Bickley jet
-    U = (1/cosh(x2))*(1/cosh(x2));
+    U = sech(y)^2
 
     # Slightly off-center vortical perturbations
-    Psiprime = exp(-(x2 + l/10)*(x2 + l/10) / (2*(l*l))) * cos(k * x1) * cos(k * x2);
+    ψ′ = exp(-(y + l/10)^2 / 2l^2) * cos(k * x) * cos(k * y)
 
     # Vortical velocity fields (ũ, ṽ) = (-∂_y, +∂_x) ψ̃
-    uprime =  Psiprime * (k * tan(k * x2) + x2 /(l*l)); 
-    vprime = -Psiprime * k * tan(k * x1); 
+    u′ = + ψ′ * (k * tan(k * y) + y / l^2)
+    v′ = - ψ′ * k * tan(k * x)
 
-    u01 = 1.0; # h
-    u02 = U + epsil * uprime; # h*u
-    u03 = epsil * vprime;  # h*v
+    Uᵢ₁ = 1.0        # h
+    Uᵢ₂ = U + ϵ * u′ # h * u
+    Uᵢ₃ = ϵ * v′     # h * v
    
-    u0 = [u01, u02, u03];
-    return u0;
+    return [Uᵢ₁, Uᵢ₂, Uᵢ₃]
 end
