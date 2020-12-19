@@ -36,7 +36,7 @@ function initu(X, μ, η)
     y = X[2]
     
     # The Bickley jet
-    U = sech(y)^2
+    U = 1 / cosh(y)^2
 
     # Slightly off-center vortical perturbations
     ψ′ = exp(-(y + l/10)^2 / 2l^2) * cos(k * x) * cos(k * y)

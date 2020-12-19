@@ -23,12 +23,11 @@ include("pdemodel.jl")          # include the PDE model file
 pde.porder = 4                              # polynomial degree
 pde.torder = 2                              # time-stepping order of accuracy
 pde.nstage = 2                              # time-stepping number of stages
-pde.dt = 0.02 * ones(5000)                  # time step sizes
+pde.dt = 0.02 * ones(10000)                 # time step sizes
 pde.soltime = collect(50:50:length(pde.dt)) # steps at which solution are collected
-pde.visdt = 1                               # visualization timestep size
+pde.visdt = 100                             # visualization timestep size
 
-gam = 10.0                     # gravity
-pde.physicsparam = [gam 0.0]
+pde.physicsparam = [10.0]      # Gravitational acceleration
 pde.tau = [1.0]                # DG stabilization parameter
 pde.GMRESrestart = 15          # number of GMRES restarts
 pde.linearsolvertol = 1e-12    # GMRES tolerance
@@ -42,7 +41,7 @@ pde.NLiter = 2                 # Newton iterations
 pde.mpiprocs = 1                # number of MPI processors
 
 # create a linear mesh for a square domain
-mesh.p, mesh.t = Mesh.SquareMesh(64,64,1) # a mesh of 8 by 8 quadrilaterals
+mesh.p, mesh.t = Mesh.SquareMesh(7, 7, 1) # a mesh of 8 by 8 quadrilaterals
 mesh.p = 4π * mesh.p .- 2π
 
 # expressions for disjoint boundaries
